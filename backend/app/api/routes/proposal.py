@@ -25,7 +25,8 @@ async def upload_proposal(file: UploadFile = File(...)):
             "file_path": result["file_path"],
             "text_length": result["text_length"],
             "raw_text": result["raw_text"],
-            "cleaned_text": result["cleaned_text"]
+            "cleaned_text": result["cleaned_text"],
+            "chunks": result["chunks"]
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred while processing the proposal: {str(e)}")

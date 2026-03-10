@@ -3,6 +3,7 @@ import uuid
 from typing import Dict, Any
 from app.services.pdf_extractor import extract_text
 from app.services.text_cleaner import clean_text
+from app.services.chunk_service import create_chunks
 
 # Define storage directory relative to the project root
 # Or hardcode a preferred absolute path depending on the application structure
@@ -15,13 +16,14 @@ def process_uploaded_proposal(file_content: bytes, original_filename: str) -> Di
     - Saves the file to disk
     - Extracts text from the PDF
     - Cleans and normalizes the text
+    - Chunks the text by section
     
     Args:
         file_content (bytes): The bytes content of the uploaded PDF.
         original_filename (str): The original filename of the uploaded file.
         
     Returns:
-        dict: A dictionary containing the file path, raw text, and cleaned text.
+        dict: A dictionary containing the file path, raw text, cleaned text, and chunks.
     """
     # Ensure storage directory exists
     os.makedirs(STORAGE_DIR, exist_ok=True)
@@ -45,10 +47,17 @@ def process_uploaded_proposal(file_content: bytes, original_filename: str) -> Di
     # Clean and normalize text
     cleaned_text = clean_text(raw_text)
     
+    # Generate section-aware chunks
+    chunks = create_chunks(cleaned_text)
+    
+    # Serialize chunks for the JSON response
+    serialized_chunks = [chunk.model_dump() for chunk in chunks]
+    
     return {
         "file_path": file_path,
         "text_length": len(raw_text),
         "raw_text": raw_text,
         "cleaned_text": cleaned_text,
+        "chunks": serialized_chunks,
     }
 
