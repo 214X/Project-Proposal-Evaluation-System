@@ -8,6 +8,7 @@ class Chunk(BaseModel):
     subsection: Optional[str] = None
     text: str
     length: int
+    is_table: Optional[bool] = False
     embedding: Optional[List[float]] = None
 
 def is_main_section_header(line: str) -> bool:

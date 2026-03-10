@@ -5,12 +5,19 @@ import UploadPanel from "./components/UploadPanel";
 import TextViewer from "./components/TextViewer";
 import ChunkCard, { Chunk } from "./components/ChunkCard";
 import EmbeddingPreview from "./components/EmbeddingPreview";
+import SearchPanel from "./components/SearchPanel";
+import SearchResults, { SearchResultItem } from "./components/SearchResults";
 
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchResults, setSearchResults] = useState<SearchResultItem[] | null>(null);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   const handleFileSelect = (file: File) => {
     setSelectedFile(file);
@@ -21,6 +28,8 @@ export default function Home() {
     setSelectedFile(null);
     setResult(null);
     setError(null);
+    setSearchResults(null);
+    setSearchQuery("");
   };
 
   const handleUpload = async () => {
@@ -50,6 +59,35 @@ export default function Home() {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSearch = async (query: string) => {
+    setIsSearching(true);
+    setSearchQuery(query);
+    setSearchError(null);
+    setSearchResults(null);
+
+    try {
+      const response = await fetch("http://localhost:8000/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query: query, top_k: 5 }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Semantic Search failed");
+      }
+
+      const data = await response.json();
+      setSearchResults(data.results);
+    } catch (err: any) {
+      setSearchError(err.message || "An error occurred while searching");
+      console.error(err);
+    } finally {
+      setIsSearching(false);
     }
   };
 
@@ -131,6 +169,27 @@ export default function Home() {
               chunks={result.chunks} 
               dimension={result.embedding_dimension} 
             />
+
+            <div className="flex justify-center -my-6">
+              <div className="w-px h-12 bg-gray-200 dark:bg-gray-700" />
+            </div>
+
+            {/* 6. Semantic Search Test */}
+            <div className="pt-6 border-t border-gray-100 dark:border-gray-800">
+               <SearchPanel onSearch={handleSearch} isLoading={isSearching} />
+               
+               {searchError && (
+                 <div className="mt-4 p-4 text-sm text-red-500 bg-red-50 dark:bg-red-900/10 rounded-lg">
+                   {searchError}
+                 </div>
+               )}
+
+               {searchResults && (
+                 <div className="mt-8 animate-in mt-4 fade-in duration-500">
+                   <SearchResults results={searchResults} query={searchQuery} />
+                 </div>
+               )}
+            </div>
 
           </div>
         )}
