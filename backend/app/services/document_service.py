@@ -4,6 +4,7 @@ from typing import Dict, Any
 from app.services.pdf_extractor import extract_text
 from app.services.text_cleaner import clean_text
 from app.services.chunk_service import create_chunks
+from app.services.embedding_service import embedding_service
 
 # Define storage directory relative to the project root
 # Or hardcode a preferred absolute path depending on the application structure
@@ -50,6 +51,11 @@ def process_uploaded_proposal(file_content: bytes, original_filename: str) -> Di
     # Generate section-aware chunks
     chunks = create_chunks(cleaned_text)
     
+    # Generate embeddings
+    embedding_results = embedding_service.embed_chunks(chunks)
+    embeddings_generated = len(embedding_results)
+    embedding_dimension = embedding_results[0]["dimension"] if embedding_results else 0
+    
     # Serialize chunks for the JSON response
     serialized_chunks = [chunk.model_dump() for chunk in chunks]
     
@@ -59,5 +65,7 @@ def process_uploaded_proposal(file_content: bytes, original_filename: str) -> Di
         "raw_text": raw_text,
         "cleaned_text": cleaned_text,
         "chunks": serialized_chunks,
+        "embeddings_generated": embeddings_generated,
+        "embedding_dimension": embedding_dimension,
     }
 

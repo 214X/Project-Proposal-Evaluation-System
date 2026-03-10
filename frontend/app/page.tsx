@@ -1,31 +1,141 @@
-import FileUpload from "@/app/components/FileUpload";
+"use client";
+
+import { useState } from "react";
+import UploadPanel from "./components/UploadPanel";
+import TextViewer from "./components/TextViewer";
+import ChunkCard, { Chunk } from "./components/ChunkCard";
+import EmbeddingPreview from "./components/EmbeddingPreview";
 
 export default function Home() {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFileSelect = (file: File) => {
+    setSelectedFile(file);
+    setError(null);
+  };
+
+  const handleClear = () => {
+    setSelectedFile(null);
+    setResult(null);
+    setError(null);
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) return;
+
+    setLoading(true);
+    setError(null);
+
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    try {
+      const response = await fetch("http://localhost:8000/proposals/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Upload failed");
+      }
+
+      const data = await response.json();
+      setResult(data);
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <main className="min-h-screen bg-[#f8f9fa] dark:bg-[#121212] pt-16 pb-24 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="w-full max-w-4xl mx-auto">
-        <header className="mb-12 text-center sm:text-left">
-          <div className="flex items-center justify-center sm:justify-start gap-3 mb-4">
-            <div className="bg-blue-600 p-2 rounded-lg shadow-sm">
-              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <h1 className="text-3xl font-normal text-gray-900 dark:text-white tracking-tight">
-              Proposal <span className="text-gray-500 font-light">Evaluator</span>
-            </h1>
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#121212] font-sans px-4 sm:px-6 lg:px-8 py-12 md:py-20">
+      <main className="max-w-6xl mx-auto space-y-12">
+        
+        {/* Header */}
+        <header className="text-center mb-16">
+          <div className="inline-flex items-center justify-center p-3 sm:p-4 bg-white dark:bg-[#1f1f1f] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 mb-6 group hover:shadow-md transition-shadow">
+            <svg className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600 outline-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
           </div>
-          <p className="text-base text-gray-600 dark:text-gray-400 max-w-2xl text-center sm:text-left">
-            Upload research proposals directly into the intelligence pipeline. Our models will extract, ingest, and process the text for vector indexing.
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-gray-900 dark:text-white">
+            Proposal <span className="text-blue-600 dark:text-blue-500">Pipeline</span> Test
+          </h1>
+          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
+            Upload document PDFs and visually inspect the extraction, semantic cleaning, and vector mapping process down the pipeline.
           </p>
         </header>
 
-        <FileUpload />
-        
-        <footer className="mt-16 text-center text-sm text-gray-400 dark:text-gray-600">
-          <p>Powered by FastAPI & Next.js RAG Stack</p>
-        </footer>
-      </div>
-    </main>
+        {/* 1. Upload Panel */}
+        <UploadPanel
+          onFileSelect={handleFileSelect}
+          onUpload={handleUpload}
+          onClear={handleClear}
+          selectedFile={selectedFile}
+          loading={loading}
+          error={error}
+        />
+
+        {/* Pipeline Output Area */}
+        {result && (
+          <div className="space-y-12 animate-in slide-in-from-bottom-8 duration-700 fade-in">
+            
+            {/* Visual connector */}
+            <div className="flex justify-center -my-6">
+              <div className="w-px h-12 bg-gradient-to-b from-gray-200 to-transparent dark:from-gray-700" />
+            </div>
+
+            {/* 2 & 3. Raw and Cleaned Text Side by Side */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <TextViewer
+                title="RAW TEXT"
+                subtitle="Unprocessed extraction sequence from PyMuPDF."
+                text={result.raw_text}
+                length={result.text_length}
+              />
+              <TextViewer
+                title="CLEANED TEXT"
+                subtitle="Normalized parsing with regex sanitation."
+                text={result.cleaned_text}
+                length={result.cleaned_text?.length || 0}
+              />
+            </div>
+
+            <div className="flex justify-center -my-6">
+              <div className="w-px h-12 bg-gray-200 dark:bg-gray-700" />
+            </div>
+
+            {/* 4. Sequence Chunks */}
+            <div className="space-y-4">
+               <div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                   CHUNKS
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">Fragmented semantic windows tailored and padded for database storage.</p>
+              </div>
+              <ChunkCard chunks={result.chunks} />
+            </div>
+
+            <div className="flex justify-center -my-6">
+              <div className="w-px h-12 bg-gray-200 dark:bg-gray-700" />
+            </div>
+
+            {/* 5. Embeddings */}
+            <EmbeddingPreview 
+              chunks={result.chunks} 
+              dimension={result.embedding_dimension} 
+            />
+
+          </div>
+        )}
+
+      </main>
+    </div>
   );
 }
