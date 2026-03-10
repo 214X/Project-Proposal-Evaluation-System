@@ -35,3 +35,11 @@ build/
 # Coverage
 .coverage
 htmlcov/
+
+# Next.js
+.next/
+out/
+build/
+
+# Uploaded Proposals Storage
+storage/
