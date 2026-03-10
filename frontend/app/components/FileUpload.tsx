@@ -80,11 +80,14 @@ export default function FileUpload() {
     }
   };
 
+  const copyText = (text: string) => {
+    navigator.clipboard.writeText(text);
+  };
+
   return (
-    <div className="w-full max-w-3xl mx-auto space-y-8 animate-in fade-in duration-500">
+    <div className="w-full max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500">
       {/* Upload Card */}
-      <div className="bg-white dark:bg-[#1f1f1f] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-8 sm:p-10 transition-all">
-        
+      <div className="bg-white dark:bg-[#1f1f1f] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-8 sm:p-10 transition-all max-w-3xl mx-auto">
         <div className="mb-6 text-center">
           <h2 className="text-2xl font-medium text-gray-800 dark:text-gray-100 font-sans tracking-tight">
             Upload your proposal
@@ -165,7 +168,7 @@ export default function FileUpload() {
         )}
       </div>
 
-      {/* Results View */}
+      {/* Results View - Split Panels */}
       {result && (
         <div className="bg-white dark:bg-[#1f1f1f] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden animate-in slide-in-from-bottom-4 duration-500">
           <div className="border-b border-gray-100 dark:border-gray-800 p-6 sm:px-8 bg-gray-50/50 dark:bg-[#1a1a1a] flex items-center justify-between">
@@ -176,28 +179,47 @@ export default function FileUpload() {
                 </svg>
                 Extraction Complete
               </h3>
-              <p className="text-sm text-gray-500 mt-1">Processed {result.text_length.toLocaleString()} characters.</p>
+              <p className="text-sm text-gray-500 mt-1">Processed {result.text_length.toLocaleString()} raw characters.</p>
             </div>
           </div>
           
-          <div className="p-6 sm:p-8">
-            <div className="mb-4 flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Extracted Text</span>
-              <button 
-                onClick={() => navigator.clipboard.writeText(result.text)}
-                className="text-xs font-medium text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                Copy Text
-              </button>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6 sm:p-8">
+            {/* Raw Text Panel */}
+            <div className="flex flex-col h-full">
+              <div className="mb-3 flex items-center justify-between bg-gray-100 dark:bg-[#262626] px-4 py-2 rounded-t-lg border-b border-gray-200 dark:border-gray-700">
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Raw Text</span>
+                <button 
+                  onClick={() => copyText(result.raw_text)}
+                  className="text-xs font-medium text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 px-2 py-1 rounded transition-colors flex items-center gap-1.5"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                  Copy
+                </button>
+              </div>
+              <div className="bg-gray-50 dark:bg-[#151515] border border-t-0 border-gray-100 dark:border-gray-800 rounded-b-lg h-[400px] lg:h-[600px] overflow-y-auto">
+                <pre className="p-4 text-xs text-gray-700 dark:text-gray-300 font-mono whitespace-pre-wrap leading-relaxed select-text">
+                  {result.raw_text || "No text could be extracted."}
+                </pre>
+              </div>
             </div>
-            
-            <div className="bg-gray-50 dark:bg-[#151515] border border-gray-100 dark:border-gray-800 rounded-xl max-h-[500px] overflow-y-auto">
-              <pre className="p-6 text-sm text-gray-700 dark:text-gray-300 font-sans whitespace-pre-wrap leading-relaxed select-text">
-                {result.text || "No text could be extracted from this document."}
-              </pre>
+
+            {/* Cleaned Text Panel */}
+            <div className="flex flex-col h-full">
+              <div className="mb-3 flex items-center justify-between bg-green-50 dark:bg-green-900/10 px-4 py-2 rounded-t-lg border-b border-green-200 dark:border-green-900/30">
+                <span className="text-xs font-semibold uppercase tracking-wider text-green-700 dark:text-green-500">Cleaned Text</span>
+                <button 
+                  onClick={() => copyText(result.cleaned_text)}
+                  className="text-xs font-medium text-green-700 hover:bg-green-100 dark:text-green-400 dark:hover:bg-green-900/30 px-2 py-1 rounded transition-colors flex items-center gap-1.5"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                  Copy
+                </button>
+              </div>
+              <div className="bg-white dark:bg-[#1a1a1a] border border-green-100 dark:border-green-900/20 border-t-0 rounded-b-lg h-[400px] lg:h-[600px] overflow-y-auto shadow-inner">
+                <pre className="p-4 text-xs text-gray-800 dark:text-gray-200 font-mono whitespace-pre-wrap leading-relaxed select-text">
+                  {result.cleaned_text || "No text could be extracted."}
+                </pre>
+              </div>
             </div>
           </div>
         </div>
