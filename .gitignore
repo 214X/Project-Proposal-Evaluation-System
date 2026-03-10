@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+.env/
+
+# MacOS
+.DS_Store
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Node
+node_modules/
+
+# Build
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+
+# Python package
+*.egg-info/
+
+# Coverage
+.coverage
+htmlcov/
