@@ -9,6 +9,7 @@ router = APIRouter()
 class SearchRequest(BaseModel):
     query: str
     top_k: int = 5
+    proposal_id: Optional[str] = None
 
 class SearchResponse(BaseModel):
     query: str
@@ -27,7 +28,14 @@ async def search_proposals(req: SearchRequest):
         query_embedding = embedding_service.embed_text(req.query)
         
         # 2. Search ChromaDB
-        search_results = vector_store.search(query_embedding=query_embedding, top_k=req.top_k)
+        # Add metadata filtering constraints to strictly scope context
+        where_filter = {"proposal_id": req.proposal_id} if req.proposal_id else None
+        
+        search_results = vector_store.search(
+            query_embedding=query_embedding, 
+            top_k=req.top_k, 
+            where=where_filter
+        )
         
         return SearchResponse(
             query=req.query,

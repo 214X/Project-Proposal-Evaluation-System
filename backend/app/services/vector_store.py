@@ -1,15 +1,15 @@
 import os
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import chromadb
 from app.services.chunk_service import Chunk
 
 class ChromaStore:
     def __init__(self):
         # Configure local persistent storage for ChromaDB
-        storage_path = os.path.join(os.getcwd(), "storage", "chroma")
-        os.makedirs(storage_path, exist_ok=True)
+        self.storage_path = os.path.join(os.getcwd(), "storage", "chroma")
+        os.makedirs(self.storage_path, exist_ok=True)
         
-        self.client = chromadb.PersistentClient(path=storage_path)
+        self.client = chromadb.PersistentClient(path=self.storage_path)
         
         self.collection = self.client.get_or_create_collection(
             name="proposal_chunks",
@@ -63,13 +63,14 @@ class ChromaStore:
                 ids=ids
             )
 
-    def search(self, query_embedding: List[float], top_k: int = 5) -> List[Dict[str, Any]]:
+    def search(self, query_embedding: List[float], top_k: int = 5, where: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """
         Perform a semantic similarity search.
         """
         results = self.collection.query(
             query_embeddings=[query_embedding],
             n_results=top_k,
+            where=where,
             include=["documents", "metadatas", "distances"]
         )
         

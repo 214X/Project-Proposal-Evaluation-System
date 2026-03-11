@@ -22,6 +22,7 @@ async def upload_proposal(file: UploadFile = File(...)):
         
         return {
             "message": "Proposal uploaded successfully",
+            "proposal_id": result["proposal_id"],
             "file_path": result["file_path"],
             "text_length": result["text_length"],
             "raw_text": result["raw_text"],

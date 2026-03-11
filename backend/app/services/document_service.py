@@ -65,6 +65,7 @@ def process_uploaded_proposal(file_content: bytes, original_filename: str) -> Di
     serialized_chunks = [chunk.model_dump() for chunk in chunks]
     
     return {
+        "proposal_id": file_uuid,
         "file_path": file_path,
         "text_length": len(raw_text),
         "raw_text": raw_text,

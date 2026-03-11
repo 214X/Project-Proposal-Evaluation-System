@@ -5,6 +5,7 @@ from fastapi import FastAPI, APIRouter
 from app.api.routes import health
 from app.api.routes import proposal
 from app.api.routes import search
+from app.api.routes import evaluation
 
 api_router = APIRouter()
 
@@ -27,4 +28,11 @@ api_router.include_router(
     search.router,
     prefix="/search",
     tags=["Search"]
+)
+
+# Evaluation router
+api_router.include_router(
+    evaluation.router,
+    prefix="/evaluate",
+    tags=["Evaluation"]
 )
